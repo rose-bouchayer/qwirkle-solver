@@ -1,5 +1,6 @@
 mod bag;
 mod player;
+mod rules;
 mod tile;
 
 use bag::Bag;

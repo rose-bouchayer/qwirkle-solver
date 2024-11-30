@@ -19,7 +19,7 @@ impl Debug for Tile {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub enum Color {
     Red,    // 🟥
     Orange, // 🟧
@@ -43,7 +43,7 @@ impl Debug for Color {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub enum Shape {
     Square,  // □
     Circle,  // ◯
