@@ -8,9 +8,9 @@ use bag::Bag;
 use board::Board;
 use player::Player;
 
-fn create_players(mut bag: Bag) -> [Player; 2] {
-    let player1 = Player::new(&mut bag);
-    let player2 = Player::new(&mut bag);
+fn create_players(bag: &mut Bag) -> [Player; 2] {
+    let player1 = Player::new(bag);
+    let player2 = Player::new(bag);
     let players = [player1, player2];
     println!("{players:?}");
 
@@ -19,17 +19,17 @@ fn create_players(mut bag: Bag) -> [Player; 2] {
 
 fn main() {
     // create bag to draw
-    let bag = Bag::new();
+    let mut bag = Bag::new();
 
     // create players to play
-    let [player1, player2] = create_players(bag);
+    let [mut player1, mut player2] = create_players(&mut bag);
 
     // create board to play on
     let mut board = Board::new();
 
-    player1.play(&mut board);
+    player1.play(&mut board, &mut bag);
     println!("player1\n{:?}", board);
 
-    player2.play(&mut board);
+    player2.play(&mut board, &mut bag);
     println!("player2\n{:?}", board);
 }

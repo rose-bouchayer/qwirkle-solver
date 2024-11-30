@@ -13,40 +13,43 @@ pub struct Player {
 
 impl Player {
     pub fn new(bag: &mut Bag) -> Player {
-        let tiles = Player::draw(bag, 6);
+        let mut player = Player { hand: Vec::new() };
 
-        Player { hand: tiles }
+        player.draw(bag, 6);
+
+        player
     }
 
-    pub fn draw(bag: &mut Bag, number: u8) -> Vec<Tile> {
+    fn draw(&mut self, bag: &mut Bag, number: u8) {
         let mut rng = thread_rng();
 
         // FIXME: add exception if bag is smaller than draw
-        let mut tiles: Vec<Tile> = Vec::new();
         for _ in 0..number {
             let max = bag.tiles.len();
             let index = rng.gen_range(0..max);
             let new_tile = bag.tiles.remove(index);
-            tiles.push(new_tile);
+            self.hand.push(new_tile);
         }
+    }
 
-        tiles
+    fn remove_tile(&mut self, bag: &mut Bag, tile_to_remove: Tile) {
+        if let Some(index) = self.hand.iter().position(|&tile| tile == tile_to_remove) {
+            self.hand.remove(index);
+            self.draw(bag, 1);
+        };
     }
 
     /**
-     * 1. find where to play
-     *  1.a. find better combinations
-     *  1.b. find location to play it
-     * 2. add tiles to board to the correct location
-     * 3. remove played tiles from player's hand
-     * 4. return played combinations with locations
-     * ? draw?
+     * 1. find where to play with which tile
+     * 2. add tiles to board to the found location
+     * 3. remove played tile from player's hand and draw
      */
-    pub fn play(&self, board: &mut Board) {
+    pub fn play(&mut self, board: &mut Board, bag: &mut Bag) {
         if board.tiles().len() == 0 {
             // if board is empty, start in the center
-            let tile = &self.hand[0];
-            board.add_tile(0, 0, tile);
+            let tile = self.hand[0];
+            board.add_tile(0, 0, &tile);
+            self.remove_tile(bag, tile);
         } else {
             // find location to play
             // find first combinable tile with tiles in the board
@@ -54,14 +57,13 @@ impl Player {
                 // add found tile to found position
                 let Location { position, tile } = location;
                 board.add_tile(position.x, position.y, &tile);
+                self.remove_tile(bag, tile);
             } else {
                 // can't find any tile to play, draw new tiles
                 // FIXME: replace a random number of tiles
                 println!("Can't play!");
             };
         }
-
-        // TODO: remove played tile from hand
     }
 
     fn find_location(&self, board: &Board) -> Option<Location> {
