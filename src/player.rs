@@ -43,6 +43,20 @@ impl Player {
 
         combinations
     }
+
+    pub fn get_longest_combinations_length(&self) -> usize {
+        // map every combinations lengths
+        let lengths = self
+            .combinations
+            .iter()
+            .map(|combination| combination.len());
+
+        // returns the higher length
+        match lengths.max() {
+            Some(max) => max,
+            None => 0,
+        }
+    }
 }
 
 // TODO: write unit tests to validate results for multiple entries + multiple sizes
