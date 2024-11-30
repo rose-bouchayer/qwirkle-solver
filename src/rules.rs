@@ -24,7 +24,7 @@ pub fn find_position(board: &Board, tile: &Tile, location: &Location) -> Option<
         return None;
     };
 
-    println!("\nchecking neighbors of {:?}", location);
+    println!("checking neighbors of {:?}", location);
     let position = location.position;
     // check each direction
     let direction = Direction::value_array().into_iter().find(|&direction| {
@@ -32,15 +32,7 @@ pub fn find_position(board: &Board, tile: &Tile, location: &Location) -> Option<
         let y = position.y + direction.1;
         let neighbor = board.get(x, y);
 
-        let is_none = neighbor.is_none();
-        if is_none {
-            println!("no tile in ({x}, {y})");
-        } else {
-            println!("tile {neighbor:?} in ({x}, {y})");
-        }
-        is_none
-
-        // neighbor.is_none()
+        neighbor.is_none()
     });
 
     if let Some(offset) = direction {

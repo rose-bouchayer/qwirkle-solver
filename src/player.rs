@@ -69,7 +69,7 @@ impl Player {
     fn find_location(&self, board: &Board) -> Option<Location> {
         let mut location = None;
         for tile in self.hand.iter() {
-            println!("\nchecking {tile:?}");
+            println!("checking {tile:?}");
 
             let position = self.find_position(board, tile);
             if let Some(p) = position {

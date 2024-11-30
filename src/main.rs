@@ -4,6 +4,8 @@ mod player;
 mod rules;
 mod tile;
 
+use std::{thread::sleep, time};
+
 use bag::Bag;
 use board::Board;
 use player::Player;
@@ -27,9 +29,17 @@ fn main() {
     // create board to play on
     let mut board = Board::new();
 
-    player1.play(&mut board, &mut bag);
-    println!("player1\n{:?}", board);
+    for turn in 1..=10 {
+        println!("=== Turn {turn} ===");
 
-    player2.play(&mut board, &mut bag);
-    println!("player2\n{:?}", board);
+        player1.play(&mut board, &mut bag);
+        println!("player1\n{:?}", board);
+
+        player2.play(&mut board, &mut bag);
+        println!("player2\n{:?}", board);
+
+        println!("=== End of turn {turn} ===\n\n\n");
+
+        sleep(time::Duration::from_secs(2));
+    }
 }
