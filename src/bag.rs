@@ -4,7 +4,6 @@ pub const BAG_SIZE: usize = 108;
 
 #[derive(Debug)]
 pub struct Bag {
-    all_tiles: [Tile; BAG_SIZE],
     // ? TODO: find a way to define maximum length?
     pub tiles: Vec<Tile>,
 }
@@ -17,7 +16,7 @@ impl Bag {
         });
         let tiles: Vec<Tile> = all_tiles.to_vec();
 
-        Bag { all_tiles, tiles }
+        Bag { tiles }
     }
 }
 
