@@ -25,6 +25,7 @@ impl Player {
     pub fn draw(bag: &mut Bag, number: u8) -> Vec<Tile> {
         let mut rng = thread_rng();
 
+        // FIXME: add exception if bag is smaller than draw
         let mut tiles: Vec<Tile> = Vec::new();
         for _ in 0..number {
             let max = bag.tiles.len();
