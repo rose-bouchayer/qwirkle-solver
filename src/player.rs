@@ -69,18 +69,13 @@ impl Player {
     fn find_location(&self, board: &Board) -> Option<Location> {
         let mut location = None;
         for tile in self.hand.iter() {
-            println!("checking {tile:?}");
-
             let position = self.find_position(board, tile);
             if let Some(p) = position {
-                println!("found position {p:?} to play");
                 location = Some(Location {
                     position: p,
                     tile: *tile,
                 });
                 break;
-            } else {
-                println!("can't find position...");
             }
         }
 
