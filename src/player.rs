@@ -2,25 +2,20 @@ use rand::{thread_rng, Rng};
 use std::fmt::Debug;
 
 use crate::bag::Bag;
-use crate::board::{Board, Direction, Position};
-use crate::rules::{validate_combination, validate_placement};
+use crate::board::{Board, Location, Position};
+use crate::rules::find_position;
 use crate::tile::Tile;
 
 #[derive(Debug)]
 pub struct Player {
     pub hand: Vec<Tile>,
-    combinations: Vec<Vec<Tile>>,
 }
 
 impl Player {
     pub fn new(bag: &mut Bag) -> Player {
         let tiles = Player::draw(bag, 6);
-        let combinations = Player::get_combinations(tiles.clone());
 
-        Player {
-            hand: tiles,
-            combinations,
-        }
+        Player { hand: tiles }
     }
 
     pub fn draw(bag: &mut Bag, number: u8) -> Vec<Tile> {
@@ -38,29 +33,6 @@ impl Player {
         tiles
     }
 
-    /** Get all possible combinations for a set of tiles. */
-    pub fn get_combinations(tiles: Vec<Tile>) -> Vec<Vec<Tile>> {
-        let combination = Vec::new();
-        let combinations = compute_combinations(combination, tiles);
-
-        combinations
-    }
-
-    // * TODO: split with `get_longest_combinations` + `get_longest_combinations_length`
-    pub fn get_longest_combinations_length(&self) -> usize {
-        // map every combinations lengths
-        let lengths = self
-            .combinations
-            .iter()
-            .map(|combination| combination.len());
-
-        // returns the higher length
-        match lengths.max() {
-            Some(max) => max,
-            None => 0,
-        }
-    }
-
     /**
      * 1. find where to play
      *  1.a. find better combinations
@@ -70,54 +42,59 @@ impl Player {
      * 4. return played combinations with locations
      * ? draw?
      */
-    pub fn play(&self, mut board: Board) -> Board {
-        let combination = self.combinations[2].clone();
-        let position = if board.tiles().len() == 0 {
-            // if board is empty, returns center `{x: 0, y: 0}`
-            Position { x: 0, y: 0 }
+    pub fn play(&self, board: &mut Board) {
+        if board.tiles().len() == 0 {
+            // if board is empty, start in the center
+            let tile = &self.hand[0];
+            board.add_tile(0, 0, tile);
         } else {
-            self.find_position(&board)
-        };
+            // find location to play
+            // find first combinable tile with tiles in the board
+            if let Some(location) = self.find_location(&board) {
+                // add found tile to found position
+                let Location { position, tile } = location;
+                board.add_tile(position.x, position.y, &tile);
+            } else {
+                // can't find any tile to play, draw new tiles
+                // FIXME: replace a random number of tiles
+                println!("Can't play!");
+            };
+        }
 
-        board.add_tiles(position, combination, Direction::East);
-
-        board
+        // TODO: remove played tile from hand
     }
 
-    fn find_position(&self, board: &Board) -> Position {
-        for combination in &self.combinations {
-            for location in board.tiles() {
-                let placement = validate_placement(board, combination, location);
-                println!("{placement} {:?} {combination:?}", location.tile);
+    fn find_location(&self, board: &Board) -> Option<Location> {
+        let mut location = None;
+        for tile in self.hand.iter() {
+            println!("\nchecking {tile:?}");
+
+            let position = self.find_position(board, tile);
+            if let Some(p) = position {
+                println!("found position {p:?} to play");
+                location = Some(Location {
+                    position: p,
+                    tile: *tile,
+                });
+                break;
+            } else {
+                println!("can't find position...");
             }
         }
 
-        Position { x: 0, y: 0 }
+        location
     }
-}
 
-// TODO: write unit tests to validate results for multiple entries + multiple sizes
-// TODO: add all arrangements for each combination
-/** Recursively computes combinations for an input combination and a set of tiles. */
-fn compute_combinations(combination: Vec<Tile>, tiles: Vec<Tile>) -> Vec<Vec<Tile>> {
-    let mut combinations: Vec<Vec<Tile>> = Vec::new();
+    fn find_position(&self, board: &Board, tile: &Tile) -> Option<Position> {
+        let mut position = None;
 
-    for (index, tile1) in tiles.iter().enumerate() {
-        let is_valid = combination
-            .iter()
-            .all(|tile| validate_combination(tile, tile1));
-
-        if is_valid {
-            let new_combination: Vec<Tile> = combination.iter().chain([tile1]).cloned().collect();
-            combinations.push(new_combination.clone());
-
-            let mut new_combinations =
-                compute_combinations(new_combination, tiles[index + 1..].to_vec());
-            if new_combinations.len() > 0 {
-                combinations.append(&mut new_combinations);
-            }
+        for location in board.tiles() {
+            position = find_position(board, tile, location);
+            if position.is_some() {
+                break;
+            };
         }
-    }
 
-    combinations
+        position
+    }
 }

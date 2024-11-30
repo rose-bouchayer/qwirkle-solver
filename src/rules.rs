@@ -1,5 +1,5 @@
 use crate::{
-    board::{Board, Direction, Location},
+    board::{Board, Direction, Location, Position},
     tile::Tile,
 };
 
@@ -19,27 +19,36 @@ pub fn validate_combination(tile0: &Tile, tile1: &Tile) -> bool {
     is_combinable && !is_same_tile
 }
 
-pub fn validate_placement(board: &Board, combination: &Vec<Tile>, location: &Location) -> bool {
-    let first_tile = combination[0].clone();
-    if !validate_combination(&first_tile, &location.tile) {
-        return false;
+pub fn find_position(board: &Board, tile: &Tile, location: &Location) -> Option<Position> {
+    if !validate_combination(tile, &location.tile) {
+        return None;
     };
 
-    println!("\nChecking neighbors of {:?}", location);
+    println!("\nchecking neighbors of {:?}", location);
+    let position = location.position;
     // check each direction
-    for direction in Direction::value_array() {
-        let x = location.position.x + direction.0;
-        let y = location.position.y + direction.1;
+    let direction = Direction::value_array().into_iter().find(|&direction| {
+        let x = position.x + direction.0;
+        let y = position.y + direction.1;
         let neighbor = board.get(x, y);
 
-        // if `neighbor` is a tile, skip this iteration
-        if let Some(tile) = neighbor {
-            println!("tile {tile:?} in ({x}, {y})");
-            continue;
+        let is_none = neighbor.is_none();
+        if is_none {
+            println!("no tile in ({x}, {y})");
         } else {
-            println!("no tile in ({x}, {y})",);
-        };
-    }
+            println!("tile {neighbor:?} in ({x}, {y})");
+        }
+        is_none
 
-    true
+        // neighbor.is_none()
+    });
+
+    if let Some(offset) = direction {
+        Some(Position {
+            x: position.x + offset.0,
+            y: position.y + offset.1,
+        })
+    } else {
+        None
+    }
 }

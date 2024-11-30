@@ -2,10 +2,17 @@ use std::fmt::{Debug, Formatter, Result};
 
 use crate::tile::Tile;
 
-#[derive(Debug)]
+#[derive(Clone, Copy)]
 pub struct Position {
     pub x: i8,
     pub y: i8,
+}
+
+impl Debug for Position {
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        let Position { x, y } = self;
+        write!(f, "({x}, {y})")
+    }
 }
 
 pub struct Location {
@@ -64,23 +71,12 @@ impl Board {
     }
 
     // TODO: check if location x/y is free before pushing
-    pub fn add_tile(&mut self, x: i8, y: i8, tile: Tile) {
+    pub fn add_tile(&mut self, x: i8, y: i8, tile: &Tile) {
         let location = Location {
             position: Position { x, y },
-            tile,
+            tile: tile.clone(),
         };
         self.tiles.push(location);
-    }
-
-    pub fn add_tiles(&mut self, position: Position, combination: Vec<Tile>, direction: Direction) {
-        let Position { x, y } = position;
-        let (direction_x, direction_y) = direction.value();
-
-        for (index, tile) in combination.into_iter().enumerate() {
-            let offset_x = x + (index as i8) * direction_x;
-            let offset_y = y + (index as i8) * direction_y;
-            self.add_tile(offset_x, offset_y, tile);
-        }
     }
 
     pub fn get(&self, x: i8, y: i8) -> Option<Tile> {
