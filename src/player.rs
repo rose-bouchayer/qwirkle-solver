@@ -2,7 +2,8 @@ use rand::{thread_rng, Rng};
 use std::fmt::Debug;
 
 use crate::bag::Bag;
-use crate::rules::validate_combination;
+use crate::board::{Board, Direction, Position};
+use crate::rules::{validate_combination, validate_placement};
 use crate::tile::Tile;
 
 #[derive(Debug)]
@@ -45,6 +46,7 @@ impl Player {
         combinations
     }
 
+    // * TODO: split with `get_longest_combinations` + `get_longest_combinations_length`
     pub fn get_longest_combinations_length(&self) -> usize {
         // map every combinations lengths
         let lengths = self
@@ -58,9 +60,44 @@ impl Player {
             None => 0,
         }
     }
+
+    /**
+     * 1. find where to play
+     *  1.a. find better combinations
+     *  1.b. find location to play it
+     * 2. add tiles to board to the correct location
+     * 3. remove played tiles from player's hand
+     * 4. return played combinations with locations
+     * ? draw?
+     */
+    pub fn play(&self, mut board: Board) -> Board {
+        let combination = self.combinations[2].clone();
+        let position = if board.tiles().len() == 0 {
+            // if board is empty, returns center `{x: 0, y: 0}`
+            Position { x: 0, y: 0 }
+        } else {
+            self.find_position(&board)
+        };
+
+        board.add_tiles(position, combination, Direction::East);
+
+        board
+    }
+
+    fn find_position(&self, board: &Board) -> Position {
+        for combination in &self.combinations {
+            for location in board.tiles() {
+                let placement = validate_placement(board, combination, location);
+                println!("{placement} {:?} {combination:?}", location.tile);
+            }
+        }
+
+        Position { x: 0, y: 0 }
+    }
 }
 
 // TODO: write unit tests to validate results for multiple entries + multiple sizes
+// TODO: add all arrangements for each combination
 /** Recursively computes combinations for an input combination and a set of tiles. */
 fn compute_combinations(combination: Vec<Tile>, tiles: Vec<Tile>) -> Vec<Vec<Tile>> {
     let mut combinations: Vec<Vec<Tile>> = Vec::new();
