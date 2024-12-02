@@ -38,7 +38,7 @@ pub enum Direction {
 }
 
 impl Direction {
-    fn value(&self) -> (i8, i8) {
+    pub fn value(&self) -> (i8, i8) {
         match *self {
             Direction::North => (0, 1),
             Direction::East => (1, 0),
@@ -47,7 +47,7 @@ impl Direction {
         }
     }
 
-    pub fn value_array() -> [(i8, i8); 4] {
+    pub fn values() -> [(i8, i8); 4] {
         [
             Direction::North.value(),
             Direction::East.value(),

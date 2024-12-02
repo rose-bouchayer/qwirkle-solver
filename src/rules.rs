@@ -25,7 +25,7 @@ pub fn validate_combination(tile0: &Tile, tile1: &Tile) -> bool {
  */
 fn validate_alignements(board: &Board, new_location: Location) -> bool {
     // check that each direction (north, east, south, west) is valid
-    let is_valid_alignement = Direction::value_array().iter().all(|&direction| {
+    let is_valid_alignement = Direction::values().iter().all(|&direction| {
         // while there is a tile AND that it's a valid combination with `new_location`
         let mut step = 1;
         let is_valid = loop {
@@ -57,7 +57,7 @@ pub fn find_position(board: &Board, tile: &Tile, location: &Location) -> Option<
 
     let position = location.position;
     // check each direction
-    let direction = Direction::value_array().into_iter().find(|&direction| {
+    let direction = Direction::values().into_iter().find(|&direction| {
         let new_position = Position {
             x: position.x + direction.0,
             y: position.y + direction.1,
