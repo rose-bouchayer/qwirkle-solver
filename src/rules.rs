@@ -47,7 +47,30 @@ fn validate_alignements(board: &Board, new_location: Location) -> bool {
         is_valid
     });
 
-    is_valid_alignement
+    // if inserted inside a line/column, it doesn't break a rule
+    let is_valid_neighbor = [
+        (Direction::South.value(), Direction::North.value()),
+        (Direction::West.value(), Direction::East.value()),
+    ]
+    .iter()
+    .all(|&(prev, next)| {
+        let Some(prev_tile) = board.get(
+            new_location.position.x + prev.0,
+            new_location.position.y + prev.1,
+        ) else {
+            return true;
+        };
+        let Some(next_tile) = board.get(
+            new_location.position.x + next.0,
+            new_location.position.y + next.1,
+        ) else {
+            return true;
+        };
+
+        validate_combination(&prev_tile, &next_tile)
+    });
+
+    is_valid_alignement && is_valid_neighbor
 }
 
 pub fn find_position(board: &Board, tile: &Tile, location: &Location) -> Option<Position> {
