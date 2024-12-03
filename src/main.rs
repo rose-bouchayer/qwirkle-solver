@@ -10,7 +10,7 @@ use bag::Bag;
 use board::Board;
 use player::Player;
 
-const TURNS: i8 = 10;
+const TURNS: i8 = 5;
 
 fn create_players(bag: &mut Bag) -> [Player; 2] {
     let player1 = Player::new(bag);
@@ -42,6 +42,6 @@ fn main() {
 
         println!("=== End of turn {turn} ===\n\n\n");
 
-        sleep(time::Duration::from_secs(1));
+        sleep(time::Duration::from_millis(250));
     }
 }

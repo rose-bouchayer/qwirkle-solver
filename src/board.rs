@@ -15,6 +15,7 @@ impl Debug for Position {
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct Location {
     pub position: Position,
     pub tile: Tile,
@@ -91,6 +92,22 @@ impl Board {
         };
 
         tile
+    }
+
+    pub fn get_tiles(&self, position: Position, direction: (i8, i8)) -> Vec<Tile> {
+        let mut tiles = Vec::new();
+
+        let mut step = 1;
+        while let Some(tile) = self.get(
+            position.x + direction.0 * step,
+            position.y + direction.1 * step,
+        ) {
+            tiles.push(tile);
+
+            step += 1;
+        }
+
+        tiles
     }
 }
 

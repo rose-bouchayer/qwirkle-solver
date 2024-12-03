@@ -19,58 +19,22 @@ pub fn validate_combination(tile0: &Tile, tile1: &Tile) -> bool {
     is_combinable && !is_same_tile
 }
 
-/**
- * Takes a Location, loops over each direction
- * and checks that alignement is valid (for connected tiles).
- */
-fn validate_alignements(board: &Board, new_location: Location) -> bool {
-    // check that each direction (north, east, south, west) is valid
-    let is_valid_alignement = Direction::values().iter().all(|&direction| {
-        // while there is a tile AND that it's a valid combination with `new_location`
-        let mut step = 1;
-        let is_valid = loop {
-            let Some(neighbor) = board.get(
-                new_location.position.x + direction.0 * step,
-                new_location.position.y + direction.1 * step,
-            ) else {
-                break true;
-            };
+fn validate_alignement(board: &Board, location: Location, prev: (i8, i8), next: (i8, i8)) -> bool {
+    let Location { position, tile } = location;
 
-            if !validate_combination(&new_location.tile, &neighbor) {
-                // not a valid combination
-                break false;
-            }
+    // gather current tile + all previous/next tiles
+    let mut tiles: Vec<Tile> = vec![tile];
+    tiles.extend(board.get_tiles(position, prev));
+    tiles.extend(board.get_tiles(position, next));
 
-            step += 1;
-        };
-
-        is_valid
+    // check all tiles altogehter one by one
+    let is_valid_alignement = tiles.iter().enumerate().all(|(index, tile)| {
+        tiles[(index + 1)..]
+            .iter()
+            .all(|next_tile| validate_combination(tile, next_tile))
     });
 
-    // if inserted inside a line/column, it doesn't break a rule
-    let is_valid_neighbor = [
-        (Direction::South.value(), Direction::North.value()),
-        (Direction::West.value(), Direction::East.value()),
-    ]
-    .iter()
-    .all(|&(prev, next)| {
-        let Some(prev_tile) = board.get(
-            new_location.position.x + prev.0,
-            new_location.position.y + prev.1,
-        ) else {
-            return true;
-        };
-        let Some(next_tile) = board.get(
-            new_location.position.x + next.0,
-            new_location.position.y + next.1,
-        ) else {
-            return true;
-        };
-
-        validate_combination(&prev_tile, &next_tile)
-    });
-
-    is_valid_alignement && is_valid_neighbor
+    is_valid_alignement
 }
 
 pub fn find_position(board: &Board, tile: &Tile, location: &Location) -> Option<Position> {
@@ -79,24 +43,33 @@ pub fn find_position(board: &Board, tile: &Tile, location: &Location) -> Option<
     };
 
     let position = location.position;
-    // check each direction
+    // check each direction and find:
+    //   - the first empty slot
+    //   - which is valid wih other tiles
     let direction = Direction::values().into_iter().find(|&direction| {
+        // find neighbor to check if it's free to drop a tile
         let new_position = Position {
             x: position.x + direction.0,
             y: position.y + direction.1,
         };
         let neighbor = board.get(new_position.x, new_position.y);
 
-        neighbor.is_none()
-            && validate_alignements(
-                board,
-                Location {
-                    position: new_position,
-                    tile: *tile,
-                },
-            )
+        // validate the combination with other tiles
+        let new_location = Location {
+            position: new_position,
+            tile: *tile,
+        };
+        let is_valid_location = [
+            (Direction::South.value(), Direction::North.value()),
+            (Direction::West.value(), Direction::East.value()),
+        ]
+        .iter()
+        .all(|&(prev, next)| validate_alignement(board, new_location, prev, next));
+
+        neighbor.is_none() && is_valid_location
     });
 
+    // return new position
     if let Some(offset) = direction {
         Some(Position {
             x: position.x + offset.0,
