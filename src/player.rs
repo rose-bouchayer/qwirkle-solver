@@ -2,8 +2,8 @@ use rand::{thread_rng, Rng};
 use std::fmt::Debug;
 
 use crate::bag::Bag;
-use crate::board::{Board, Location, Position};
-use crate::rules::find_position;
+use crate::board::{Board, Location};
+use crate::rules::validate_location;
 use crate::tile::Tile;
 
 #[derive(Debug)]
@@ -12,6 +12,7 @@ pub struct Player {
 }
 
 impl Player {
+    /// Constructs a new player with a hand full of 6 random tiles.
     pub fn new(bag: &mut Bag) -> Player {
         let mut player = Player { hand: Vec::new() };
 
@@ -20,20 +21,29 @@ impl Player {
         player
     }
 
+    /// Draws a `number` of tiles from `bag` and stores them in player's hand.
     fn draw(&mut self, bag: &mut Bag, number: u8) {
         let mut rng = thread_rng();
 
-        // FIXME: add exception if bag is smaller than draw
-        for _ in 0..number {
-            let max = bag.tiles.len();
+        let range = number.min(bag.tiles().len() as u8);
+        for _ in 0..range {
+            let max = bag.tiles().len();
+
+            // prevent `gen_range()` to panic
+            if max == 0 {
+                break;
+            }
+
             let index = rng.gen_range(0..max);
-            let new_tile = bag.tiles.remove(index);
-            self.hand.push(new_tile);
+            if let Some(new_tile) = bag.remove(index) {
+                self.hand.push(new_tile);
+            };
         }
     }
 
-    fn remove_tile(&mut self, bag: &mut Bag, tile_to_remove: Tile) {
-        if let Some(index) = self.hand.iter().position(|&tile| tile == tile_to_remove) {
+    /// Removes the `tile` within player's hand and draws a new tile.
+    fn remove(&mut self, bag: &mut Bag, tile: Tile) {
+        if let Some(index) = self.hand.iter().position(|&local_tile| local_tile == tile) {
             self.hand.remove(index);
             self.draw(bag, 1);
         };
@@ -49,7 +59,7 @@ impl Player {
             // if board is empty, start in the center
             let tile = self.hand[0];
             board.add_tile(0, 0, &tile);
-            self.remove_tile(bag, tile);
+            self.remove(bag, tile);
         } else {
             // find location to play
             // find first combinable tile with tiles in the board
@@ -57,7 +67,7 @@ impl Player {
                 // add found tile to found position
                 let Location { position, tile } = location;
                 board.add_tile(position.x, position.y, &tile);
-                self.remove_tile(bag, tile);
+                self.remove(bag, tile);
             } else {
                 // can't find any tile to play, draw new tiles
                 // FIXME: replace a random number of tiles
@@ -66,32 +76,15 @@ impl Player {
         }
     }
 
+    /// Finds a location to play. If no location is found, returns `None`.
     fn find_location(&self, board: &Board) -> Option<Location> {
-        let mut location = None;
-        for tile in self.hand.iter() {
-            let position = self.find_position(board, tile);
-            if let Some(p) = position {
-                location = Some(Location {
-                    position: p,
-                    tile: *tile,
-                });
-                break;
-            }
-        }
+        let location = self.hand.iter().find_map(|tile| {
+            board
+                .tiles()
+                .iter()
+                .find_map(|location| validate_location(board, tile, location))
+        });
 
         location
-    }
-
-    fn find_position(&self, board: &Board, tile: &Tile) -> Option<Position> {
-        let mut position = None;
-
-        for location in board.tiles() {
-            position = find_position(board, tile, location);
-            if position.is_some() {
-                break;
-            };
-        }
-
-        position
     }
 }

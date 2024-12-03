@@ -39,16 +39,16 @@ pub enum Direction {
 }
 
 impl Direction {
-    pub fn value(&self) -> (i8, i8) {
+    pub fn value(&self) -> DirectionVector {
         match *self {
-            Direction::North => (0, 1),
-            Direction::East => (1, 0),
-            Direction::South => (0, -1),
-            Direction::West => (-1, 0),
+            Direction::North => DirectionVector(0, 1),
+            Direction::East => DirectionVector(1, 0),
+            Direction::South => DirectionVector(0, -1),
+            Direction::West => DirectionVector(-1, 0),
         }
     }
 
-    pub fn values() -> [(i8, i8); 4] {
+    pub fn values() -> [DirectionVector; 4] {
         [
             Direction::North.value(),
             Direction::East.value(),
@@ -58,20 +58,26 @@ impl Direction {
     }
 }
 
+#[derive(Clone, Copy, Debug)]
+pub struct DirectionVector(pub i8, pub i8);
+
 pub struct Board {
     tiles: Vec<Location>,
 }
 
 impl Board {
+    /// Constructs a new, empty board to play on.
     pub fn new() -> Board {
         Board { tiles: Vec::new() }
     }
 
+    /// Returns all tiles on the board. Tiles aren't sorted.
     pub fn tiles(&self) -> &Vec<Location> {
         &self.tiles
     }
 
     // TODO: check if location x/y is free before pushing
+    /// Add a tile to the board at `(x, y)` position.
     pub fn add_tile(&mut self, x: i8, y: i8, tile: &Tile) {
         let location = Location {
             position: Position { x, y },
@@ -80,6 +86,8 @@ impl Board {
         self.tiles.push(location);
     }
 
+    /// Searches for a tile at `(x, y)` position.
+    /// If something is found `Some(Tile)` is returned, otherwise`None`.
     pub fn get(&self, x: i8, y: i8) -> Option<Tile> {
         let location = self
             .tiles
@@ -87,14 +95,16 @@ impl Board {
             .find(|Location { position, .. }| position.x == x && position.y == y);
 
         let tile = match location {
-            Some(location) => Some(location.tile.clone()),
+            Some(location) => Some(location.tile),
             None => None,
         };
 
         tile
     }
 
-    pub fn get_tiles(&self, position: Position, direction: (i8, i8)) -> Vec<Tile> {
+    /// Returns tiles next to a given position, for a given direction,
+    /// until an empty location is reached.
+    pub fn get_tiles(&self, position: Position, direction: DirectionVector) -> Vec<Tile> {
         let mut tiles = Vec::new();
 
         let mut step = 1;
@@ -147,7 +157,7 @@ impl Debug for Board {
                     Some(tile) => format!("{tile:?}"),
                     None => String::from("   "),
                 };
-                str.push_str(&format!("{tile_str}")); /* [{x:>2}, {y:>2}] */
+                str.push_str(&format!("{tile_str}"));
             }
             str.push_str("\n");
         }

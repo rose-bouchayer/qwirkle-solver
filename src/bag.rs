@@ -1,22 +1,43 @@
+use std::fmt::Debug;
+
 use crate::tile::{Color, Shape, Tile, COLORS_NUMBER, SHAPES_NUMBER, SHAPES_REPETITION};
 
+/// 6 shapes * 6 colors * 3 tiles = 108 tiles
 pub const BAG_SIZE: usize = 108;
 
 #[derive(Debug)]
 pub struct Bag {
     // ? TODO: find a way to define maximum length?
-    pub tiles: Vec<Tile>,
+    tiles: Vec<Tile>,
 }
 
 impl Bag {
+    /// Constructs a new filled bag with 108 tiles. Tiles are sorted.
     pub fn new() -> Bag {
-        let all_tiles: [Tile; BAG_SIZE] = core::array::from_fn(|index| Tile {
-            color: get_tile_color(index),
-            shape: get_tile_shape(index),
-        });
-        let tiles: Vec<Tile> = all_tiles.to_vec();
+        let mut tiles = Vec::new();
+
+        for index in 0..BAG_SIZE {
+            tiles.push(Tile {
+                color: get_tile_color(index),
+                shape: get_tile_shape(index),
+            });
+        }
 
         Bag { tiles }
+    }
+
+    /// Returns all tiles in the bag. Tiles are sorted.
+    pub fn tiles(&self) -> &Vec<Tile> {
+        &self.tiles
+    }
+
+    /// Removes and returns the tile at position `index` within the bag.
+    pub fn remove(&mut self, index: usize) -> Option<Tile> {
+        if index < self.tiles.len() {
+            Some(self.tiles.remove(index))
+        } else {
+            None
+        }
     }
 }
 
