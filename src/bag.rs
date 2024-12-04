@@ -1,6 +1,6 @@
 use std::fmt::Debug;
 
-use crate::tile::{Color, Shape, Tile, COLORS_NUMBER, SHAPES_NUMBER, SHAPES_REPETITION};
+use crate::tile::{Color, Shape, Tile, Tiles, COLORS_NUMBER, SHAPES_NUMBER, SHAPES_REPETITION};
 
 /// 6 shapes * 6 colors * 3 tiles = 108 tiles
 pub const BAG_SIZE: usize = 108;
@@ -8,7 +8,7 @@ pub const BAG_SIZE: usize = 108;
 #[derive(Debug)]
 pub struct Bag {
     // ? TODO: find a way to define maximum length?
-    tiles: Vec<Tile>,
+    tiles: Tiles,
 }
 
 impl Bag {
@@ -27,7 +27,7 @@ impl Bag {
     }
 
     /// Returns all tiles in the bag. Tiles are sorted.
-    pub fn tiles(&self) -> &Vec<Tile> {
+    pub fn tiles(&self) -> &Tiles {
         &self.tiles
     }
 

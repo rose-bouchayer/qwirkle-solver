@@ -35,7 +35,7 @@ pub fn validate_alignement(
     let Location { position, tile } = location;
 
     // gather current tile + all previous/next tiles
-    let mut tiles: Vec<Tile> = vec![tile];
+    let mut tiles = vec![tile];
     tiles.extend(board.get_tiles(position, prev));
     tiles.extend(board.get_tiles(position, next));
 

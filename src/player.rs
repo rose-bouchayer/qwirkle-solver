@@ -4,11 +4,11 @@ use std::fmt::Debug;
 use crate::bag::Bag;
 use crate::board::{Board, Location};
 use crate::rules::validate_location;
-use crate::tile::Tile;
+use crate::tile::{Tile, Tiles};
 
 #[derive(Debug)]
 pub struct Player {
-    pub hand: Vec<Tile>,
+    pub hand: Tiles,
 }
 
 impl Player {

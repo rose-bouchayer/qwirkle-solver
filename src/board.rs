@@ -1,6 +1,6 @@
 use std::fmt::{Debug, Formatter, Result};
 
-use crate::tile::Tile;
+use crate::tile::{Tile, Tiles};
 
 #[derive(Clone, Copy)]
 pub struct Position {
@@ -104,7 +104,7 @@ impl Board {
 
     /// Returns tiles next to a given position, for a given direction,
     /// until an empty location is reached.
-    pub fn get_tiles(&self, position: Position, direction: DirectionVector) -> Vec<Tile> {
+    pub fn get_tiles(&self, position: Position, direction: DirectionVector) -> Tiles {
         let mut tiles = Vec::new();
 
         let mut step = 1;

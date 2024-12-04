@@ -19,6 +19,8 @@ impl Debug for Tile {
     }
 }
 
+pub type Tiles = Vec<Tile>;
+
 #[derive(Clone, Copy, PartialEq)]
 pub enum Color {
     Red,    // 🟥
