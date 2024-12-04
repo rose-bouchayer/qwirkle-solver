@@ -26,9 +26,14 @@ impl Bag {
         Bag { tiles }
     }
 
-    /// Returns all tiles in the bag. Tiles are sorted.
+    /// Returns all tiles in the bag.
     pub fn tiles(&self) -> &Tiles {
         &self.tiles
+    }
+
+    /// Add back `tiles` to the bag.
+    pub fn add(&mut self, tiles: Tiles) {
+        self.tiles.extend(tiles);
     }
 
     /// Removes and returns the tile at position `index` within the bag.
