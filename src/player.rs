@@ -53,6 +53,33 @@ impl Player {
         };
     }
 
+    /// Removes from hand a random number of tiles,
+    /// draws as many new tiles and put back removed tiles in `bag`.
+    fn replace(&mut self, bag: &mut Bag) {
+        let mut rng = thread_rng();
+        let number = rng.gen_range(0..=self.hand.len());
+
+        let mut tiles = Vec::new();
+        let mut new_tiles = Vec::new();
+        for _ in 0..number {
+            // remove a random tile from hand
+            let index_hand = rng.gen_range(0..self.hand.len());
+            let tile = self.hand.remove(index_hand);
+            tiles.push(tile);
+
+            // pick a random new tile from bag
+            let index_bag = rng.gen_range(0..bag.tiles().len());
+            if let Some(new_tile) = bag.remove(index_bag) {
+                new_tiles.push(new_tile);
+            };
+        }
+
+        // add back tiles to bag
+        bag.add(tiles);
+        // place new tiles from bag in hand
+        self.hand.extend(new_tiles);
+    }
+
     /**
      * 1. find where to play with which tile
      * 2. add tiles to board to the found location
@@ -82,34 +109,6 @@ impl Player {
             };
         }
     }
-
-    /// Removes from hand a random number of tiles,
-    /// draws as many new tiles and put back removed tiles in `bag`.
-    fn replace(&mut self, bag: &mut Bag) {
-        let mut rng = thread_rng();
-        let number = rng.gen_range(0..=self.hand.len());
-
-        let mut tiles = Vec::new();
-        let mut new_tiles = Vec::new();
-        for _ in 0..number {
-            // remove a random tile from hand
-            let index_hand = rng.gen_range(0..self.hand.len());
-            let tile = self.hand.remove(index_hand);
-            tiles.push(tile);
-
-            // pick a random new tile from bag
-            let index_bag = rng.gen_range(0..bag.tiles().len());
-            if let Some(new_tile) = bag.remove(index_bag) {
-                new_tiles.push(new_tile);
-            };
-        }
-
-        // add back tiles to bag
-        bag.add(tiles);
-        // place new tiles from bag in hand
-        self.hand.extend(new_tiles);
-    }
-
     /// Finds a location to play. If no location is found, returns `None`.
     fn find_location(&self, board: &Board) -> Option<Location> {
         let location = self.hand.iter().find_map(|tile| {
