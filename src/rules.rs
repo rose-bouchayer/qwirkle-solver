@@ -79,12 +79,9 @@ pub fn validate_location(board: &Board, tile: &Tile, location: &Location) -> Opt
             position: new_position,
             tile: *tile,
         };
-        let is_valid_location = [
-            (Direction::South.value(), Direction::North.value()),
-            (Direction::West.value(), Direction::East.value()),
-        ]
-        .iter()
-        .all(|&(prev, next)| validate_alignement(board, new_location, prev, next));
+        let is_valid_location = Direction::alignements()
+            .iter()
+            .all(|&(prev, next)| validate_alignement(board, new_location, prev, next));
 
         if is_valid_location {
             Some(new_location)

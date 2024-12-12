@@ -56,6 +56,13 @@ impl Direction {
             Direction::West.value(),
         ]
     }
+
+    pub fn alignements() -> [(DirectionVector, DirectionVector); 2] {
+        [
+            (Direction::South.value(), Direction::North.value()),
+            (Direction::West.value(), Direction::East.value()),
+        ]
+    }
 }
 
 #[derive(Clone, Copy, Debug)]
