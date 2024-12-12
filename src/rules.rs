@@ -70,6 +70,10 @@ pub fn validate_location(board: &Board, tile: &Tile, location: &Location) -> Opt
         };
         let neighbor = board.get(new_position.x, new_position.y);
 
+        if neighbor.is_some() {
+            return None;
+        }
+
         // validate the combination with other tiles
         let new_location = Location {
             position: new_position,
@@ -82,7 +86,7 @@ pub fn validate_location(board: &Board, tile: &Tile, location: &Location) -> Opt
         .iter()
         .all(|&(prev, next)| validate_alignement(board, new_location, prev, next));
 
-        if neighbor.is_none() && is_valid_location {
+        if is_valid_location {
             Some(new_location)
         } else {
             None
