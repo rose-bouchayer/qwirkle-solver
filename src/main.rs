@@ -35,13 +35,16 @@ fn main() {
         println!("=== Turn {turn} ===");
 
         player1.play(&mut board, &mut bag);
-        println!("player1\n{:?}", board);
+        println!("Player 1 - {} points\n{:?}", player1.score, board);
 
         player2.play(&mut board, &mut bag);
-        println!("player2\n{:?}", board);
+        println!("Player 2 - {} points\n{:?}", player2.score, board);
 
         println!("=== End of turn {turn} ===\n\n\n");
 
         sleep(time::Duration::from_millis(250));
     }
+
+    println!("Player 1 score: {}", player1.score);
+    println!("Player 2 score: {}", player2.score);
 }

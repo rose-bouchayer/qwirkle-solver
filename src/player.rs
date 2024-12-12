@@ -9,12 +9,16 @@ use crate::tile::{Tile, Tiles};
 #[derive(Debug)]
 pub struct Player {
     pub hand: Tiles,
+    pub score: i32,
 }
 
 impl Player {
     /// Constructs a new player with a hand full of 6 random tiles.
     pub fn new(bag: &mut Bag) -> Player {
-        let mut player = Player { hand: Vec::new() };
+        let mut player = Player {
+            hand: Vec::new(),
+            score: 0,
+        };
 
         player.draw(bag, 6);
 
@@ -58,17 +62,19 @@ impl Player {
         if board.tiles().len() == 0 {
             // if board is empty, start in the center
             let tile = self.hand[0];
-            board.add_tile(Location {
+            let points = board.add_tile(Location {
                 position: Position { x: 0, y: 0 },
                 tile,
             });
+            self.score += points;
             self.remove(bag, tile);
         } else {
             // find location to play
             // find first combinable tile with tiles in the board
             if let Some(location) = self.find_location(&board) {
                 // add found tile to found position
-                board.add_tile(location);
+                let points = board.add_tile(location);
+                self.score += points;
                 self.remove(bag, location.tile);
             } else {
                 // can't find any tile to play, replace some tiles
