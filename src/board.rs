@@ -78,11 +78,7 @@ impl Board {
 
     // TODO: check if location x/y is free before pushing
     /// Add a tile to the board at `(x, y)` position.
-    pub fn add_tile(&mut self, x: i8, y: i8, tile: &Tile) {
-        let location = Location {
-            position: Position { x, y },
-            tile: tile.clone(),
-        };
+    pub fn add_tile(&mut self, location: Location) {
         self.tiles.push(location);
     }
 

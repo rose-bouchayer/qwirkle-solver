@@ -2,7 +2,7 @@ use rand::{thread_rng, Rng};
 use std::fmt::Debug;
 
 use crate::bag::Bag;
-use crate::board::{Board, Location};
+use crate::board::{Board, Location, Position};
 use crate::rules::validate_location;
 use crate::tile::{Tile, Tiles};
 
@@ -58,16 +58,18 @@ impl Player {
         if board.tiles().len() == 0 {
             // if board is empty, start in the center
             let tile = self.hand[0];
-            board.add_tile(0, 0, &tile);
+            board.add_tile(Location {
+                position: Position { x: 0, y: 0 },
+                tile,
+            });
             self.remove(bag, tile);
         } else {
             // find location to play
             // find first combinable tile with tiles in the board
             if let Some(location) = self.find_location(&board) {
                 // add found tile to found position
-                let Location { position, tile } = location;
-                board.add_tile(position.x, position.y, &tile);
-                self.remove(bag, tile);
+                board.add_tile(location);
+                self.remove(bag, location.tile);
             } else {
                 // can't find any tile to play, replace some tiles
                 self.replace(bag);
