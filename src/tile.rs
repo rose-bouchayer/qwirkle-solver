@@ -5,7 +5,7 @@ pub const SHAPES_NUMBER: usize = 6;
 // How many of the same shape there are in one set of color.
 pub const SHAPES_REPETITION: usize = 3;
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Tile {
     pub color: Color,
     pub shape: Shape,
@@ -21,7 +21,7 @@ impl Debug for Tile {
 
 pub type Tiles = Vec<Tile>;
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Color {
     Red,    // 🟥
     Orange, // 🟧
@@ -45,7 +45,7 @@ impl Debug for Color {
     }
 }
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum Shape {
     Square,  // □
     Circle,  // ◯

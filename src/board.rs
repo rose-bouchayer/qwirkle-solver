@@ -2,7 +2,7 @@ use std::fmt::{Debug, Formatter, Result};
 
 use crate::tile::{Tile, Tiles};
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Position {
     pub x: i8,
     pub y: i8,
@@ -15,7 +15,7 @@ impl Debug for Position {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Location {
     pub position: Position,
     pub tile: Tile,
@@ -85,29 +85,8 @@ impl Board {
 
     // TODO: check if location x/y is free before pushing
     /// Add a tile to the board at `(x, y)` position.
-    /// Returns how many points the move gives.
-    pub fn add_tile(&mut self, location: Location) -> i32 {
+    pub fn add_tile(&mut self, location: Location) {
         self.tiles.push(location);
-
-        let points = Direction::alignements()
-            .iter()
-            .map(|&(prev, next)| {
-                let length_prev = self.get_tiles(location.position, prev).len();
-                let length_next = self.get_tiles(location.position, next).len();
-                let length = length_next + length_prev;
-
-                match length {
-                    0 => 0,
-                    6 => 12,
-                    _ => (length + 1) as i32,
-                }
-            })
-            .reduce(|acc, points| acc + points)
-            .unwrap_or(1);
-
-        // If it's the first tile added to the board, it has no neighbors,
-        // `points` would be equal to 0 but the move still gives 1 points.
-        points.max(1)
     }
 
     /// Searches for a tile at `(x, y)` position.

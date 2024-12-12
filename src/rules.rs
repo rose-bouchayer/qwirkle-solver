@@ -50,45 +50,69 @@ pub fn validate_alignement(
 }
 
 /// Validates if a `tile` can be played near `location`.
-/// If the `tile` is a valid combination and had a valid spot,
-/// returns the new location `Some(Location)`.
-/// If no combination is found at every close position, returns `None`.
-pub fn validate_location(board: &Board, tile: &Tile, location: &Location) -> Option<Location> {
+/// If the `tile` is a valid combination and have valid spots,
+/// returns a collection of new locations `Vec<Location>`.
+/// If no combination is found at every close position, returns an empty vector.
+pub fn validate_locations(board: &Board, tile: &Tile, location: &Location) -> Vec<Location> {
     if !validate_combination(tile, &location.tile) {
-        return None;
+        return Vec::new();
     };
 
     let position = location.position;
     // check each direction and find:
     //   - the first empty slot
     //   - which is valid wih other tiles
-    let new_location = Direction::values().into_iter().find_map(|direction| {
-        // find neighbor to check if it's free to drop a tile
-        let new_position = Position {
-            x: position.x + direction.0,
-            y: position.y + direction.1,
-        };
-        let neighbor = board.get(new_position.x, new_position.y);
+    let new_locations = Direction::values()
+        .into_iter()
+        .filter_map(|direction| {
+            // find neighbor to check if it's free to drop a tile
+            let new_position = Position {
+                x: position.x + direction.0,
+                y: position.y + direction.1,
+            };
+            let neighbor = board.get(new_position.x, new_position.y);
 
-        if neighbor.is_some() {
-            return None;
-        }
+            if neighbor.is_some() {
+                return None;
+            }
 
-        // validate the combination with other tiles
-        let new_location = Location {
-            position: new_position,
-            tile: *tile,
-        };
-        let is_valid_location = Direction::alignements()
-            .iter()
-            .all(|&(prev, next)| validate_alignement(board, new_location, prev, next));
+            // validate the combination with other tiles
+            let new_location = Location {
+                position: new_position,
+                tile: *tile,
+            };
+            let is_valid_location = Direction::alignements()
+                .iter()
+                .all(|&(prev, next)| validate_alignement(board, new_location, prev, next));
 
-        if is_valid_location {
-            Some(new_location)
-        } else {
-            None
-        }
-    });
+            if is_valid_location {
+                Some(new_location)
+            } else {
+                None
+            }
+        })
+        .collect::<Vec<Location>>();
 
-    new_location
+    new_locations
+}
+
+/// Get points when playing `location` on `board`.
+pub fn get_points(board: &Board, location: Location) -> i32 {
+    let points = Direction::alignements()
+        .iter()
+        .map(|&(prev, next)| {
+            let length_prev = board.get_tiles(location.position, prev).len();
+            let length_next = board.get_tiles(location.position, next).len();
+            let length = length_next + length_prev;
+
+            match length {
+                0 => 0,
+                6 => 12,
+                _ => (length + 1) as i32,
+            }
+        })
+        .reduce(|acc, points| acc + points)
+        .unwrap_or(1);
+
+    points
 }
