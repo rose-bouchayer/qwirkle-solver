@@ -4,21 +4,26 @@ use std::fmt::Debug;
 
 use crate::bag::Bag;
 use crate::board::{Board, Location, Position};
-use crate::rules::{get_points, validate_locations};
+use crate::rules::{get_points, validate_combination, validate_locations};
 use crate::tile::{Tile, Tiles};
+
+type Combination = Tiles;
+type Combinations = Vec<Tiles>;
 
 #[derive(Debug)]
 pub struct Player {
-    pub hand: Tiles,
     pub points: i32,
+    pub hand: Tiles,
+    pub combinations: Combinations,
 }
 
 impl Player {
     /// Constructs a new player with a hand full of 6 random tiles.
     pub fn new(bag: &mut Bag) -> Player {
         let mut player = Player {
-            hand: Vec::new(),
             points: 0,
+            hand: Vec::new(),
+            combinations: Vec::new(),
         };
 
         player.draw(bag, 6);
@@ -30,6 +35,7 @@ impl Player {
     fn draw(&mut self, bag: &mut Bag, number: u8) {
         let mut rng = thread_rng();
 
+        // make sure to not draw more than what the bag contains
         let range = number.min(bag.tiles().len() as u8);
         for _ in 0..range {
             let max = bag.tiles().len();
@@ -39,11 +45,15 @@ impl Player {
                 break;
             }
 
+            // generate a random index and pick the associated tile
             let index = rng.gen_range(0..max);
             if let Some(new_tile) = bag.remove(index) {
                 self.hand.push(new_tile);
             };
         }
+
+        // update combinations with new tiles in hand
+        self.update_combinations();
     }
 
     /// Removes the `tile` within player's hand and draws a new tile.
@@ -58,27 +68,23 @@ impl Player {
     /// draws as many new tiles and put back removed tiles in `bag`.
     fn replace(&mut self, bag: &mut Bag) {
         let mut rng = thread_rng();
-        let number = rng.gen_range(0..=self.hand.len());
+
+        // generate number of tiles to replace
+        let number = rng.gen_range(1..=self.hand.len()) as u8;
 
         let mut tiles = Vec::new();
-        let mut new_tiles = Vec::new();
         for _ in 0..number {
-            // remove a random tile from hand
-            let index_hand = rng.gen_range(0..self.hand.len());
-            let tile = self.hand.remove(index_hand);
+            // generate a random index and remove a random tile from hand
+            let index = rng.gen_range(0..self.hand.len());
+            let tile = self.hand.remove(index);
             tiles.push(tile);
-
-            // pick a random new tile from bag
-            let index_bag = rng.gen_range(0..bag.tiles().len());
-            if let Some(new_tile) = bag.remove(index_bag) {
-                new_tiles.push(new_tile);
-            };
         }
 
-        // add back tiles to bag
+        // draw new tiles from bag
+        self.draw(bag, number);
+
+        // add replaced tiles to bag
         bag.add(tiles);
-        // place new tiles from bag in hand
-        self.hand.extend(new_tiles);
     }
 
     /**
@@ -164,6 +170,43 @@ impl Player {
         moves.sort();
 
         moves
+    }
+
+    /// Updates player's `combinations` based on current `hand` state.
+    /// Must be call after every hand update (e.g. `.draw()`).
+    fn update_combinations(&mut self) {
+        // for each tile in hand, compute combinations
+        // wrap the tile in `Vec<Tile>` to create a one tile combination
+        self.combinations = self
+            .hand
+            .iter()
+            .flat_map(|&tile| self.compute_combinations(&vec![tile], &self.hand))
+            .collect::<Combinations>();
+    }
+
+    /// For one `combination`, recursively computes every possible combination with `tiles`.
+    /// It returns entry `combination` in addition with found combinations.
+    /// So if no combination is found, returned vector has at least one element.
+    fn compute_combinations(&self, combination: &Combination, tiles: &Tiles) -> Combinations {
+        let combination_clone = vec![combination.clone()];
+
+        // for each tile
+        let new_combinations: Combinations = tiles
+            .iter()
+            // validate that `tile` can be added to the `combination`
+            .filter(|&tile| combination.iter().all(|t| validate_combination(t, tile)))
+            .flat_map(|tile| {
+                // add `tile` to `combination` by creating a `new_combination`
+                let mut new_combination: Combination = combination.clone();
+                new_combination.push(*tile);
+
+                // keep checking if `new_combination` can create more combinations
+                self.compute_combinations(&new_combination, &tiles)
+            })
+            .collect::<Combinations>();
+
+        // concat entry `combination` with `new_combinations`
+        [combination_clone, new_combinations].concat()
     }
 }
 
