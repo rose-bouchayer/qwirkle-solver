@@ -1,9 +1,21 @@
+use rand::{thread_rng, Rng};
 use std::fmt::{Debug, Formatter, Result};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Direction(pub i8, pub i8);
 
 impl Direction {
+    pub fn rand() -> Direction {
+        let index = thread_rng().gen_range(0..4);
+        match index {
+            0 => Direction(0, 1),  // north ^
+            1 => Direction(1, 0),  // east >
+            2 => Direction(0, -1), // south v
+            3 => Direction(-1, 0), // west <
+            _ => Direction(0, 1),
+        }
+    }
+
     pub fn values() -> [Direction; 4] {
         [
             Direction(0, 1),  // north ^

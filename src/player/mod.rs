@@ -4,7 +4,9 @@ use rand::{thread_rng, Rng};
 use std::fmt::Debug;
 
 use crate::bag::Bag;
-use crate::board::{location::Location, position::Position, r#move::Move, Board};
+use crate::board::direction::Direction;
+use crate::board::r#move::PartialMove;
+use crate::board::{position::Position, r#move::Move, Board};
 use crate::rules::validate_tiles;
 use crate::tile::{Tile, Tiles};
 use moves::get_combination_moves;
@@ -104,18 +106,36 @@ impl Player {
     }
 
     /// Finds the best move and plays it.
-    /// TODO: split this in two sub-methods
     pub fn play(&mut self, board: &mut Board, bag: &mut Bag) {
         if board.tiles().len() == 0 {
-            // if board is empty, start in the center
-            // TODO: replace playing 1 tile by playing the longest combination
-            let tile = self.hand[0];
-            board.add_tile(Location {
-                position: Position { x: 0, y: 0 },
-                tile,
-            });
-            self.points += 1;
-            self.remove_tile(bag, tile);
+            // if board is empty, play the longest combination
+            let mut lengths = self
+                .combinations
+                .iter()
+                .enumerate()
+                .map(|(index, combination)| (index, combination.len()))
+                .collect::<Vec<(usize, usize)>>();
+            lengths.sort_by(|a, b| a.1.cmp(&b.1));
+
+            // play it in the center
+            if let Some(&(index, length)) = lengths.last() {
+                let combination = self.combinations[index].clone();
+
+                board.add_tiles(&PartialMove {
+                    combination: combination.clone(),
+                    position: Position { x: 0, y: 0 },
+                    direction: Direction::rand(),
+                });
+
+                self.points += length as Points;
+
+                self.remove_tiles(bag, combination);
+            } else {
+                eprintln!(
+                    "Player.play() -> can't first any combination to play on first move: {:#?}",
+                    self.combinations
+                );
+            }
         } else {
             // get every possible moves
             let moves = self.get_moves(board);
