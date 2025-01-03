@@ -16,7 +16,6 @@ fn create_players(bag: &mut Bag) -> [Player; 2] {
     let player1 = Player::new(bag);
     let player2 = Player::new(bag);
     let players = [player1, player2];
-    println!("{players:?}");
 
     players
 }
@@ -27,6 +26,8 @@ fn main() {
 
     // create players to play
     let [mut player1, mut player2] = create_players(&mut bag);
+    println!("Player 1: {:?}", player1.hand);
+    println!("Player 2: {:?}", player2.hand);
 
     // create board to play on
     let mut board = Board::new();

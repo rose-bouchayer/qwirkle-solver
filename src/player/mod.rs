@@ -1,18 +1,21 @@
+mod moves;
+
 use rand::{thread_rng, Rng};
-use std::cmp::Ordering;
 use std::fmt::Debug;
 
 use crate::bag::Bag;
-use crate::board::{Board, Location, Position};
-use crate::rules::{get_points, validate_combination, validate_locations};
+use crate::board::{location::Location, position::Position, r#move::Move, Board};
+use crate::rules::validate_tiles;
 use crate::tile::{Tile, Tiles};
+use moves::get_combination_moves;
 
-type Combination = Tiles;
-type Combinations = Vec<Tiles>;
+pub type Points = i32;
+pub type Combination = Tiles;
+pub type Combinations = Vec<Tiles>;
 
 #[derive(Debug)]
 pub struct Player {
-    pub points: i32,
+    pub points: Points,
     pub hand: Tiles,
     pub combinations: Combinations,
 }
@@ -57,11 +60,18 @@ impl Player {
     }
 
     /// Removes the `tile` within player's hand and draws a new tile.
-    fn remove(&mut self, bag: &mut Bag, tile: Tile) {
+    fn remove_tile(&mut self, bag: &mut Bag, tile: Tile) {
         if let Some(index) = self.hand.iter().position(|&local_tile| local_tile == tile) {
             self.hand.remove(index);
             self.draw(bag, 1);
         };
+    }
+
+    /// Removes `tiles` within player's hand and draws new tiles.
+    fn remove_tiles(&mut self, bag: &mut Bag, combination: Combination) {
+        for tile in combination {
+            self.remove_tile(bag, tile);
+        }
     }
 
     /// Removes from hand a random number of tiles,
@@ -70,12 +80,18 @@ impl Player {
         let mut rng = thread_rng();
 
         // generate number of tiles to replace
-        let number = rng.gen_range(1..=self.hand.len()) as u8;
+        let length = (self.hand.len() as u8).max(1);
+        let number = rng.gen_range(1..=length);
 
         let mut tiles = Vec::new();
         for _ in 0..number {
+            let length = self.hand.len();
+            if length == 0 {
+                break;
+            }
+
             // generate a random index and remove a random tile from hand
-            let index = rng.gen_range(0..self.hand.len());
+            let index = rng.gen_range(0..length);
             let tile = self.hand.remove(index);
             tiles.push(tile);
         }
@@ -87,38 +103,37 @@ impl Player {
         bag.add(tiles);
     }
 
-    /**
-     * 1. find where to play with which tile
-     * 2. add tiles to board to the found location
-     * 3. remove played tile from player's hand and draw
-     */
+    /// Finds the best move and plays it.
+    /// TODO: split this in two sub-methods
     pub fn play(&mut self, board: &mut Board, bag: &mut Bag) {
         if board.tiles().len() == 0 {
             // if board is empty, start in the center
+            // TODO: replace playing 1 tile by playing the longest combination
             let tile = self.hand[0];
             board.add_tile(Location {
                 position: Position { x: 0, y: 0 },
                 tile,
             });
             self.points += 1;
-            self.remove(bag, tile);
+            self.remove_tile(bag, tile);
         } else {
             // get every possible moves
             let moves = self.get_moves(board);
 
             // get last tiles from possible moves
             // last = best move, highest amount of points
+            // TODO: based the latest highest score, randomly select a move with the same score
             if let Some(last_move) = moves.last() {
-                let Move { location, points } = *last_move;
+                let (partial_move, points) = last_move.into_partial();
 
-                // add tile to board
-                board.add_tile(location);
+                // play move by adding tiles to the board
+                board.add_tiles(&partial_move);
 
-                // increase pointes
+                // increase points
                 self.points += points;
 
-                // remove tile from hand
-                self.remove(bag, location.tile);
+                // remove combination from hand
+                self.remove_tiles(bag, partial_move.combination);
             } else {
                 // can't find any tile to play, replace some tiles
                 self.replace(bag);
@@ -128,41 +143,11 @@ impl Player {
 
     /// Finds all playable locations with associated points to gain.
     fn get_moves(&self, board: &Board) -> Vec<Move> {
+        // for every combination from player's hand
         let mut moves = self
-            .hand
+            .combinations
             .iter()
-            // for every tile in players hand
-            .filter_map(|tile| {
-                let moves = board
-                    .tiles()
-                    .iter()
-                    // compare tile from hand to every tile on board
-                    .filter_map(|location| {
-                        let new_locations = validate_locations(board, tile, location);
-
-                        // no new locations has been found
-                        if new_locations.is_empty() {
-                            return None;
-                        }
-
-                        // compute points for each location and map them together
-                        let moves = new_locations
-                            .iter()
-                            .map(|&location| Move {
-                                location,
-                                points: get_points(board, location),
-                            })
-                            .collect::<Vec<Move>>();
-
-                        // returns `moves` for this `location`
-                        Some(moves)
-                    })
-                    .flatten()
-                    .collect::<Vec<Move>>();
-
-                // returns `moves` for this `tile`
-                Some(moves)
-            })
+            .filter_map(|combination| get_combination_moves(board, combination))
             .flatten()
             .collect::<Vec<Move>>();
 
@@ -174,7 +159,7 @@ impl Player {
 
     /// Updates player's `combinations` based on current `hand` state.
     /// Must be call after every hand update (e.g. `.draw()`).
-    fn update_combinations(&mut self) {
+    pub fn update_combinations(&mut self) {
         // for each tile in hand, compute combinations
         // wrap the tile in `Vec<Tile>` to create a one tile combination
         self.combinations = self
@@ -194,7 +179,7 @@ impl Player {
         let new_combinations: Combinations = tiles
             .iter()
             // validate that `tile` can be added to the `combination`
-            .filter(|&tile| combination.iter().all(|t| validate_combination(t, tile)))
+            .filter(|&tile| combination.iter().all(|t| validate_tiles(t, tile)))
             .flat_map(|tile| {
                 // add `tile` to `combination` by creating a `new_combination`
                 let mut new_combination: Combination = combination.clone();
@@ -207,24 +192,5 @@ impl Player {
 
         // concat entry `combination` with `new_combinations`
         [combination_clone, new_combinations].concat()
-    }
-}
-
-/// An association of how many `points` players gain if they play at `Location`.
-#[derive(Debug, PartialEq, Eq)]
-pub struct Move {
-    location: Location,
-    points: i32,
-}
-
-impl PartialOrd for Move {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.points.cmp(&other.points))
-    }
-}
-
-impl Ord for Move {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.points.cmp(&other.points)
     }
 }

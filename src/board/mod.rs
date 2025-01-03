@@ -1,73 +1,18 @@
+pub mod direction;
+pub mod location;
+pub mod r#move;
+pub mod position;
+
 use std::fmt::{Debug, Formatter, Result};
+
+use direction::Direction;
+use location::Location;
+use position::Position;
+use r#move::PartialMove;
 
 use crate::tile::{Tile, Tiles};
 
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub struct Position {
-    pub x: i8,
-    pub y: i8,
-}
-
-impl Debug for Position {
-    fn fmt(&self, f: &mut Formatter) -> Result {
-        let Position { x, y } = self;
-        write!(f, "({x}, {y})")
-    }
-}
-
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub struct Location {
-    pub position: Position,
-    pub tile: Tile,
-}
-
-impl Debug for Location {
-    fn fmt(&self, f: &mut Formatter) -> Result {
-        let Location {
-            position: Position { x, y },
-            tile,
-        } = self;
-        write!(f, "{tile:?} ({x}, {y})")
-    }
-}
-
-pub enum Direction {
-    North,
-    East,
-    South,
-    West,
-}
-
-impl Direction {
-    pub fn value(&self) -> DirectionVector {
-        match *self {
-            Direction::North => DirectionVector(0, 1),
-            Direction::East => DirectionVector(1, 0),
-            Direction::South => DirectionVector(0, -1),
-            Direction::West => DirectionVector(-1, 0),
-        }
-    }
-
-    pub fn values() -> [DirectionVector; 4] {
-        [
-            Direction::North.value(),
-            Direction::East.value(),
-            Direction::South.value(),
-            Direction::West.value(),
-        ]
-    }
-
-    pub fn alignements() -> [(DirectionVector, DirectionVector); 2] {
-        [
-            (Direction::South.value(), Direction::North.value()),
-            (Direction::West.value(), Direction::East.value()),
-        ]
-    }
-}
-
-#[derive(Clone, Copy, Debug)]
-pub struct DirectionVector(pub i8, pub i8);
-
+#[derive(Clone)]
 pub struct Board {
     tiles: Vec<Location>,
 }
@@ -84,9 +29,31 @@ impl Board {
     }
 
     // TODO: check if location x/y is free before pushing
-    /// Add a tile to the board at `(x, y)` position.
+    /// Adds a tile to the board at `(x, y)` position.
     pub fn add_tile(&mut self, location: Location) {
         self.tiles.push(location);
+    }
+
+    /// Adds multiple tiles from a `partial_move`.
+    /// Starts at `position`, goes to `direction` and places tiles from `combination`.
+    pub fn add_tiles(&mut self, partial_move: &PartialMove) {
+        let PartialMove {
+            combination,
+            position,
+            direction,
+        } = partial_move;
+
+        for (index, &tile) in combination.iter().enumerate() {
+            let step = index as i8;
+            let location = Location {
+                tile,
+                position: Position {
+                    x: position.x + direction.0 * step,
+                    y: position.y + direction.1 * step,
+                },
+            };
+            self.add_tile(location)
+        }
     }
 
     /// Searches for a tile at `(x, y)` position.
@@ -107,7 +74,7 @@ impl Board {
 
     /// Returns tiles next to a given position, for a given direction,
     /// until an empty location is reached.
-    pub fn get_tiles(&self, position: Position, direction: DirectionVector) -> Tiles {
+    pub fn get_tiles(&self, position: Position, direction: Direction) -> Tiles {
         let mut tiles = Vec::new();
 
         let mut step = 1;
