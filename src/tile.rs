@@ -34,12 +34,12 @@ pub enum Color {
 impl Debug for Color {
     fn fmt(&self, f: &mut Formatter) -> Result {
         let color: &str = match self {
-            Color::Red => "\x1b[41m",
-            Color::Orange => "\x1b[48;2;255;127;0m",
-            Color::Yellow => "\x1b[43m",
-            Color::Green => "\x1b[42m",
-            Color::Blue => "\x1b[44m",
-            Color::Purple => "\x1b[45m",
+            Color::Red => "\x1b[30;41m",
+            Color::Orange => "\x1b[30;48;2;255;127;0m",
+            Color::Yellow => "\x1b[30;43m",
+            Color::Green => "\x1b[30;42m",
+            Color::Blue => "\x1b[30;44m",
+            Color::Purple => "\x1b[30;45m",
         };
         write!(f, "{}", color)
     }
