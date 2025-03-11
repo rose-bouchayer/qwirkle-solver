@@ -16,6 +16,7 @@ pub fn setup_board(board: &mut Board, tiles: Vec<Location>) {
 
 pub fn create_player(hand: Tiles) -> Player {
     let mut player = Player {
+        id: 1,
         points: 0,
         hand,
         combinations: Vec::new(),
