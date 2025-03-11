@@ -106,7 +106,7 @@ impl Player {
     }
 
     /// Finds the best move and plays it.
-    pub fn play(&mut self, board: &mut Board, bag: &mut Bag) {
+    pub fn play(&mut self, board: &mut Board, bag: &mut Bag) -> bool {
         if board.tiles().len() == 0 {
             // if board is empty, play the longest combination
             let mut lengths = self
@@ -158,6 +158,16 @@ impl Player {
                 // can't find any tile to play, replace some tiles
                 self.replace(bag);
             };
+        }
+
+        // check if player has still tiles in hand
+        if self.hand.len() > 0 {
+            true
+        } else {
+            // final move of the game rewards 6 bonus points
+            self.points += 6;
+
+            false
         }
     }
 

@@ -35,11 +35,19 @@ fn main() {
     for turn in 1..=TURNS {
         println!("=== Turn {turn} ===");
 
-        player1.play(&mut board, &mut bag);
+        let player1_can_play = player1.play(&mut board, &mut bag);
         println!("Player 1 - {} points\n{:?}", player1.points, board);
+        if !player1_can_play {
+            println!("Player 1 ended the game");
+            break;
+        }
 
-        player2.play(&mut board, &mut bag);
+        let player2_can_play = player2.play(&mut board, &mut bag);
         println!("Player 2 - {} points\n{:?}", player2.points, board);
+        if !player2_can_play {
+            println!("Player 1 ended the game");
+            break;
+        }
 
         println!("=== End of turn {turn} ===\n\n\n");
 
