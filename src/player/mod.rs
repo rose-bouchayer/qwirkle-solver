@@ -1,6 +1,6 @@
 mod moves;
 
-use rand::{thread_rng, Rng};
+use rand::Rng;
 use std::fmt::Debug;
 
 use crate::bag::Bag;
@@ -17,6 +17,7 @@ pub type Combinations = Vec<Tiles>;
 
 #[derive(Debug)]
 pub struct Player {
+    pub id: u8,
     pub points: Points,
     pub hand: Tiles,
     pub combinations: Combinations,
@@ -24,8 +25,9 @@ pub struct Player {
 
 impl Player {
     /// Constructs a new player with a hand full of 6 random tiles.
-    pub fn new(bag: &mut Bag) -> Player {
+    pub fn new(id: u8, bag: &mut Bag) -> Player {
         let mut player = Player {
+            id,
             points: 0,
             hand: Vec::new(),
             combinations: Vec::new(),
@@ -38,7 +40,7 @@ impl Player {
 
     /// Draws a `number` of tiles from `bag` and stores them in player's hand.
     fn draw(&mut self, bag: &mut Bag, number: u8) {
-        let mut rng = thread_rng();
+        let mut rng = rand::rng();
 
         // make sure to not draw more than what the bag contains
         let range = number.min(bag.tiles().len() as u8);
@@ -51,7 +53,7 @@ impl Player {
             }
 
             // generate a random index and pick the associated tile
-            let index = rng.gen_range(0..max);
+            let index = rng.random_range(0..max);
             if let Some(new_tile) = bag.remove(index) {
                 self.hand.push(new_tile);
             };
@@ -79,11 +81,11 @@ impl Player {
     /// Removes from hand a random number of tiles,
     /// draws as many new tiles and put back removed tiles in `bag`.
     fn replace(&mut self, bag: &mut Bag) {
-        let mut rng = thread_rng();
+        let mut rng = rand::rng();
 
         // generate number of tiles to replace
         let length = (self.hand.len() as u8).max(1);
-        let number = rng.gen_range(1..=length);
+        let number = rng.random_range(1..=length);
 
         let mut tiles = Vec::new();
         for _ in 0..number {
@@ -93,7 +95,7 @@ impl Player {
             }
 
             // generate a random index and remove a random tile from hand
-            let index = rng.gen_range(0..length);
+            let index = rng.random_range(0..length);
             let tile = self.hand.remove(index);
             tiles.push(tile);
         }
